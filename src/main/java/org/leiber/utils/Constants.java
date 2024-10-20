@@ -31,6 +31,7 @@ public class Constants {
         public static final Integer FIVE = 5;
         public static final Integer SIX = 6;
         public static final Integer SEVEN = 7;
+        public static final Integer TEN = 10;
 
         private MagicNumber() {
 
