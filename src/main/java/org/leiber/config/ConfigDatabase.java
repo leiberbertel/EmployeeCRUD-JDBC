@@ -2,10 +2,10 @@ package org.leiber.config;
 
 import io.github.cdimascio.dotenv.Dotenv;
 import org.apache.commons.dbcp2.BasicDataSource;
-import org.leiber.utils.Constants.*;
+import org.leiber.exception.GenericException;
+import org.leiber.utils.Constants.MagicNumber;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -62,7 +62,11 @@ public class ConfigDatabase {
      * @author Leiber Bertel
      */
     public static Connection getConnection() throws SQLException {
-        return getInstance().getConnection();
+        BasicDataSource instance = getInstance();
+        if (instance == null) {
+            throw new GenericException("The BasicDataSource instance could not be obtained.");
+        }
+        return instance.getConnection();
     }
 
 }
