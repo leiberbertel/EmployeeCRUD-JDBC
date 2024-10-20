@@ -1,5 +1,6 @@
 package org.leiber.repository.employee;
 
+import org.leiber.config.ConfigDatabase;
 import org.leiber.entity.EmployeeEntity;
 import org.leiber.exception.GenericException;
 import org.leiber.repository.Repository;
@@ -46,10 +47,8 @@ public class EmployeeRepositoryImpl implements Repository<EmployeeEntity> {
         return employee;
     }
 
-    private final Connection connection;
-
-    public EmployeeRepositoryImpl(Connection connection) {
-        this.connection = connection;
+    private Connection getConnection() throws SQLException {
+        return ConfigDatabase.getConnection();
     }
 
     /**
@@ -61,11 +60,11 @@ public class EmployeeRepositoryImpl implements Repository<EmployeeEntity> {
      */
     @Override
     public List<EmployeeEntity> findAll() {
-        String sql = "SELECT first_name, pa_surname, ma_surname, email, salary FROM employees";
+        String sql = "SELECT id, first_name, pa_surname, ma_surname, email, salary, curp FROM employees";
         List<EmployeeEntity> employees = new ArrayList<>();
-        try (Statement statement = connection.createStatement();
-             ResultSet resultSet = statement.executeQuery(sql)
-        ) {
+        try (Connection connection = getConnection();
+             Statement statement = connection.createStatement();
+             ResultSet resultSet = statement.executeQuery(sql)) {
             while (resultSet.next()) {
                 EmployeeEntity employee = createEmployee(resultSet);
                 employees.add(employee);
@@ -89,9 +88,9 @@ public class EmployeeRepositoryImpl implements Repository<EmployeeEntity> {
     @Override
     public EmployeeEntity getById(Integer id) {
         EmployeeEntity employee = null;
-        String sql = "SELECT first_name, pa_surname, ma_surname, email, salary FROM employees WHERE id = ?";
-        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)
-        ) {
+        String sql = "SELECT id, first_name, pa_surname, ma_surname, email, salary, curp FROM employees WHERE id = ?";
+        try (Connection connection = getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
             preparedStatement.setInt(MagicNumber.ONE, id);
             ResultSet resultSet = preparedStatement.executeQuery();
             if (resultSet.next()) {
@@ -121,8 +120,8 @@ public class EmployeeRepositoryImpl implements Repository<EmployeeEntity> {
         if (employeeEntity.getEmployeeId() != null) {
             updateEmployee(employeeEntity);
         } else {
-            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)
-            ) {
+            try (Connection connection = getConnection();
+                 PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                 preparedStatement.setString(MagicNumber.ONE, employeeEntity.getFirstname());
                 preparedStatement.setString(MagicNumber.TWO, employeeEntity.getFirstSurname());
                 preparedStatement.setString(MagicNumber.THREE, employeeEntity.getSecondSurname());
@@ -155,8 +154,8 @@ public class EmployeeRepositoryImpl implements Repository<EmployeeEntity> {
 
         EmployeeEntity existingEmployee = this.getById(employeeEntity.getEmployeeId());
 
-        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)
-        ) {
+        try (Connection connection = getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
             preparedStatement.setString(MagicNumber.ONE, TextUtil.isEmptyNull(employeeEntity.getFirstname()) ? existingEmployee.getFirstname() : employeeEntity.getFirstname());
             preparedStatement.setString(MagicNumber.TWO, TextUtil.isEmptyNull(employeeEntity.getFirstSurname()) ? existingEmployee.getFirstSurname() : employeeEntity.getFirstSurname());
             preparedStatement.setString(MagicNumber.THREE, TextUtil.isEmptyNull(employeeEntity.getSecondSurname()) ? existingEmployee.getSecondSurname() : employeeEntity.getSecondSurname());
@@ -191,8 +190,8 @@ public class EmployeeRepositoryImpl implements Repository<EmployeeEntity> {
 
         String sql = "DELETE FROM employees WHERE id = ?";
 
-        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)
-        ) {
+        try (Connection connection = getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
             preparedStatement.setInt(MagicNumber.ONE, id);
             int rowAffected = preparedStatement.executeUpdate();
 
