@@ -61,7 +61,7 @@ public class EmployeeRepositoryImpl implements Repository<EmployeeEntity> {
      */
     @Override
     public List<EmployeeEntity> findAll() {
-        String sql = "SELECT first_name, pa_surname, ma_surname, email, salary FROM employees";
+        String sql = "SELECT id, first_name, pa_surname, ma_surname, email, salary, curp FROM employees";
         List<EmployeeEntity> employees = new ArrayList<>();
         try (Statement statement = connection.createStatement();
              ResultSet resultSet = statement.executeQuery(sql)
@@ -89,7 +89,7 @@ public class EmployeeRepositoryImpl implements Repository<EmployeeEntity> {
     @Override
     public EmployeeEntity getById(Integer id) {
         EmployeeEntity employee = null;
-        String sql = "SELECT first_name, pa_surname, ma_surname, email, salary FROM employees WHERE id = ?";
+        String sql = "SELECT id, first_name, pa_surname, ma_surname, email, salary, curp FROM employees WHERE id = ?";
         try (PreparedStatement preparedStatement = connection.prepareStatement(sql)
         ) {
             preparedStatement.setInt(MagicNumber.ONE, id);
