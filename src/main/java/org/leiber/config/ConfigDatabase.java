@@ -1,9 +1,12 @@
 package org.leiber.config;
 
 import io.github.cdimascio.dotenv.Dotenv;
+import org.apache.commons.dbcp2.BasicDataSource;
+import org.leiber.exception.GenericException;
+import org.leiber.utils.Constants.MagicNumber;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -19,26 +22,51 @@ public class ConfigDatabase {
     static String jdbcUrl = "jdbc:mysql://localhost:" + dotenv.get("PORT") + "/" + dotenv.get("DATABASE");
     static String username = dotenv.get("USER");
     static String password = dotenv.get("PASSWORD");
-    private static Connection connection;
+    private static BasicDataSource poolConnection;
 
     private ConfigDatabase() {
     }
 
     /**
-     * Performs the connection to the MySQL db, using the Singleton pattern. <br>
-     * Created on 09/10/2024 at 9:30 p.m.
+     * Configures and returns the connection pool. <br>
+     * Created on 19/10/2024 at 8:51 p.m.
      *
+     * @returns BasicDataSource
      * @author Leiber Bertel
      */
-    public static Connection getInstance() {
-        if (connection == null) {
+    public static BasicDataSource getInstance() {
+        if (poolConnection == null) {
             try {
-                connection = DriverManager.getConnection(jdbcUrl, username, password);
+                poolConnection = new BasicDataSource();
+                poolConnection.setUrl(jdbcUrl);
+                poolConnection.setUsername(username);
+                poolConnection.setPassword(password);
+
+                poolConnection.setInitialSize(MagicNumber.THREE);
+                poolConnection.setMinIdle(MagicNumber.THREE);
+                poolConnection.setMaxIdle(MagicNumber.TEN);
+                poolConnection.setMaxTotal(MagicNumber.TEN);
+
             } catch (Exception e) {
                 logger.log(Level.SEVERE, "Error, unable to connect to the db", e);
             }
         }
-        return connection;
+        return poolConnection;
+    }
+
+    /**
+     * Gets the connection from the connection pool. <br>
+     * Created on 19/10/2024 at 8:50 p.m.
+     *
+     * @returns Connection
+     * @author Leiber Bertel
+     */
+    public static Connection getConnection() throws SQLException {
+        BasicDataSource instance = getInstance();
+        if (instance == null) {
+            throw new GenericException("The BasicDataSource instance could not be obtained.");
+        }
+        return instance.getConnection();
     }
 
 }
