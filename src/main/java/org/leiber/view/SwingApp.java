@@ -11,9 +11,15 @@ import java.awt.*;
 import java.math.BigDecimal;
 import java.util.List;
 
+/**
+ * Class to configure the view using Java Swing <br>
+ * Modified on 04/11/2024 at 05:00 p.m.
+ * @version 1.0.0
+ * @author Leiber Bertel
+ */
 public class SwingApp extends JFrame {
 
-    private final Repository<EmployeeEntity> employeeRepository = null;
+    private final Repository<EmployeeEntity> employeeRepository;
     private final JTable employeeTable;
 
     private final String errorMsg = "Error";
@@ -55,7 +61,7 @@ public class SwingApp extends JFrame {
         eliminarButton.setFocusPainted(false);
 
         // Crear el objeto Repository para acceder a la base de datos
-        // employeeRepository = new EmployeeRepositoryImpl();
+        employeeRepository = new EmployeeRepositoryImpl();
 
         // Cargar los empleados iniciales en la tabla
         refreshEmployeeTable();
@@ -81,6 +87,7 @@ public class SwingApp extends JFrame {
             model.addColumn("Apellido Materno");
             model.addColumn("Email");
             model.addColumn("Salario");
+            model.addColumn("Curp");
 
             for (EmployeeEntity employee : employees) {
                 Object[] rowData = {
@@ -89,7 +96,8 @@ public class SwingApp extends JFrame {
                         employee.getFirstSurname(),
                         employee.getSecondSurname(),
                         employee.getEmail(),
-                        employee.getSalary()
+                        employee.getSalary(),
+                        employee.getCurp()
                 };
                 model.addRow(rowData);
             }
@@ -108,33 +116,42 @@ public class SwingApp extends JFrame {
         JTextField maternoField = new JTextField();
         JTextField emailField = new JTextField();
         JTextField salarioField = new JTextField();
+        JTextField curpField = new JTextField();
 
         Object[] fields = {
                 "Nombre:", nombreField,
                 "Apellido Paterno:", paternoField,
                 "Apellido Materno:", maternoField,
                 "Email:", emailField,
-                "Salario:", salarioField
+                "Salario:", salarioField,
+                "Curp:", curpField
         };
 
         int result = JOptionPane.showConfirmDialog(this, fields, "Agregar Empleado", JOptionPane.OK_CANCEL_OPTION);
 
         if (result == JOptionPane.OK_OPTION) {
-            // Crear un nuevo objeto Employee con los datos ingresados
-            EmployeeEntity employee = new EmployeeEntity();
-            employee.setFirstname(nombreField.getText());
-            employee.setFirstSurname(paternoField.getText());
-            employee.setSecondSurname(maternoField.getText());
-            employee.setEmail(emailField.getText());
-            employee.setSalary(new BigDecimal(salarioField.getText()));
+            try {
+                // Crear un nuevo objeto Employee con los datos ingresados
+                EmployeeEntity employee = new EmployeeEntity();
+                employee.setFirstname(nombreField.getText());
+                employee.setFirstSurname(paternoField.getText());
+                employee.setSecondSurname(maternoField.getText());
+                employee.setEmail(emailField.getText());
+                employee.setSalary(new BigDecimal(salarioField.getText()));
+                employee.setCurp(curpField.getText());
 
-            // Guardar el nuevo empleado en la base de datos
-            employeeRepository.save(employee);
+                // Guardar el nuevo empleado en la base de datos
+                employeeRepository.save(employee);
+                JOptionPane.showMessageDialog(this, "Empleado agregado correctamente", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+            } catch (NumberFormatException e) {
+                JOptionPane.showMessageDialog(this, "Ingrese un valor númerico válido para el salario", errorMsg, JOptionPane.ERROR_MESSAGE);
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(this, "Ha ocurrido un error al intentar guardar al empleado", errorMsg, JOptionPane.ERROR_MESSAGE);
+            }
 
             // Actualizar la tabla con los empleados actualizados
             refreshEmployeeTable();
 
-            JOptionPane.showMessageDialog(this, "Empleado agregado correctamente", "Éxito", JOptionPane.INFORMATION_MESSAGE);
         }
     }
 
@@ -155,13 +172,15 @@ public class SwingApp extends JFrame {
                     JTextField apellidoMaternoField = new JTextField(empleado.getSecondSurname());
                     JTextField emailField = new JTextField(empleado.getEmail());
                     JTextField salarioField = new JTextField(String.valueOf(empleado.getSalary()));
+                    JTextField curpField = new JTextField(empleado.getCurp());
 
                     Object[] fields = {
                             "Nombre:", nombreField,
                             "Apellido Paterno:", apellidoPaternoField,
                             "Apellido Materno:", apellidoMaternoField,
                             "Email:", emailField,
-                            "Salario:", salarioField
+                            "Salario:", salarioField,
+                            "Curp:", curpField
                     };
 
                     int confirmResult = JOptionPane.showConfirmDialog(this, fields, "Actualizar Empleado", JOptionPane.OK_CANCEL_OPTION);
@@ -172,6 +191,7 @@ public class SwingApp extends JFrame {
                         empleado.setSecondSurname(apellidoMaternoField.getText());
                         empleado.setEmail(emailField.getText());
                         empleado.setSalary(new BigDecimal(salarioField.getText()));
+                        empleado.setCurp(curpField.getText());
 
                         // Guardar los cambios en la base de datos
                         employeeRepository.save(empleado);
